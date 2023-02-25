@@ -403,6 +403,7 @@ typedef struct {
     const char *format_degraded;
     const char *threshold_degraded;
     const char *threshold_critical;
+    const char *print_units;
     const char *memory_used_method;
     const char *unit;
     const int decimals;

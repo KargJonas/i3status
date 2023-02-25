@@ -22,7 +22,7 @@ static const char *const iec_symbols[] = {"B", "KiB", "MiB", "GiB", "TiB"};
  * Prints the given amount of bytes in a human readable manner.
  *
  */
-static int print_bytes_human(char *outwalk, unsigned long bytes, const char *unit, const int decimals) {
+static int print_bytes_human(char *outwalk, unsigned long bytes, const char *unit, const int decimals, const char *print_units) {
     double base = bytes;
     size_t exponent = 0;
     while (base >= BINARY_BASE && exponent < MAX_EXPONENT) {
@@ -34,7 +34,12 @@ static int print_bytes_human(char *outwalk, unsigned long bytes, const char *uni
         exponent += 1;
     }
     const int prec = decimals > MAX_DECIMALS ? MAX_DECIMALS : decimals;
-    return sprintf(outwalk, "%.*f %s", prec, base, iec_symbols[exponent]);
+
+    if (strcasecmp(print_units, "true") == 0) {
+        return sprintf(outwalk, "%.*f %s", prec, base, iec_symbols[exponent]);
+    }
+
+    return sprintf(outwalk, "%.*f", prec, base);
 }
 
 static int print_percentage(char *outwalk, float percent) {
@@ -171,6 +176,7 @@ void print_memory(memory_ctx_t *ctx) {
 
     char string_ram_total[STRING_SIZE];
     char string_ram_used[STRING_SIZE];
+//    char string_ram_used_unitless[STRING_SIZE];
     char string_ram_free[STRING_SIZE];
     char string_ram_available[STRING_SIZE];
     char string_ram_shared[STRING_SIZE];
@@ -179,11 +185,11 @@ void print_memory(memory_ctx_t *ctx) {
     char string_percentage_used[STRING_SIZE];
     char string_percentage_shared[STRING_SIZE];
 
-    print_bytes_human(string_ram_total, ram_total, ctx->unit, ctx->decimals);
-    print_bytes_human(string_ram_used, ram_used, ctx->unit, ctx->decimals);
-    print_bytes_human(string_ram_free, ram_free, ctx->unit, ctx->decimals);
-    print_bytes_human(string_ram_available, ram_available, ctx->unit, ctx->decimals);
-    print_bytes_human(string_ram_shared, ram_shared, ctx->unit, ctx->decimals);
+    print_bytes_human(string_ram_total, ram_total, ctx->unit, ctx->decimals, ctx->print_units);
+    print_bytes_human(string_ram_used, ram_used, ctx->unit, ctx->decimals, ctx->print_units);
+    print_bytes_human(string_ram_free, ram_free, ctx->unit, ctx->decimals, ctx->print_units);
+    print_bytes_human(string_ram_available, ram_available, ctx->unit, ctx->decimals, ctx->print_units);
+    print_bytes_human(string_ram_shared, ram_shared, ctx->unit, ctx->decimals, ctx->print_units);
     print_percentage(string_percentage_free, 100.0 * ram_free / ram_total);
     print_percentage(string_percentage_available, 100.0 * ram_available / ram_total);
     print_percentage(string_percentage_used, 100.0 * ram_used / ram_total);
@@ -192,6 +198,7 @@ void print_memory(memory_ctx_t *ctx) {
     placeholder_t placeholders[] = {
         {.name = "%total", .value = string_ram_total},
         {.name = "%used", .value = string_ram_used},
+//        {.name = "%used_unitless", .value = string_ram_used_unitless},
         {.name = "%free", .value = string_ram_free},
         {.name = "%available", .value = string_ram_available},
         {.name = "%shared", .value = string_ram_shared},
