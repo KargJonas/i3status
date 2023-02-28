@@ -390,6 +390,16 @@ int main(int argc, char *argv[]) {
         CFG_CUSTOM_SEP_BLOCK_WIDTH_OPT,
         CFG_END()};
 
+    cfg_opt_t blipper_opts[] = {
+        CFG_STR("format", "%blip %breathe %quote %emoji", CFGF_NONE),
+        CFG_INT("n_emojis", 1, CFGF_NONE),
+        CFG_CUSTOM_ALIGN_OPT,
+        CFG_CUSTOM_COLOR_OPTS,
+        CFG_CUSTOM_MIN_WIDTH_OPT,
+        CFG_CUSTOM_SEPARATOR_OPT,
+        CFG_CUSTOM_SEP_BLOCK_WIDTH_OPT,
+        CFG_END()};
+
     cfg_opt_t usage_opts[] = {
         CFG_STR("format", "%usage", CFGF_NONE),
         CFG_STR("format_above_threshold", NULL, CFGF_NONE),
@@ -472,6 +482,7 @@ int main(int argc, char *argv[]) {
         CFG_SEC("ddate", ddate_opts, CFGF_NONE),
         CFG_SEC("load", load_opts, CFGF_NONE),
         CFG_SEC("memory", memory_opts, CFGF_NONE),
+        CFG_SEC("blipper", blipper_opts, CFGF_NONE),
         CFG_SEC("cpu_usage", usage_opts, CFGF_NONE),
         CFG_SEC("read_file", read_opts, CFGF_TITLE | CFGF_MULTI),
         CFG_END()};
@@ -831,6 +842,19 @@ int main(int argc, char *argv[]) {
                     .decimals = cfg_getint(sec, "decimals"),
                 };
                 print_memory(&ctx);
+                SEC_CLOSE_MAP;
+            }
+
+            CASE_SEC("blipper") {
+                SEC_OPEN_MAP("blipper");
+                blipper_ctx_t ctx = {
+                    .json_gen = json_gen,
+                    .buf = buffer,
+                    .buflen = sizeof(buffer),
+                    .format = cfg_getstr(sec, "format"),
+                    .n_emojis = cfg_getint(sec, "n_emojis"),
+                };
+                print_blipper(&ctx);
                 SEC_CLOSE_MAP;
             }
 

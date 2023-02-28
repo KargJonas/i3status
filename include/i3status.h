@@ -415,6 +415,16 @@ typedef struct {
     yajl_gen json_gen;
     char *buf;
     const size_t buflen;
+    const char *format;
+    const int n_emojis;
+} blipper_ctx_t;
+
+void print_blipper(blipper_ctx_t *ctx);
+
+typedef struct {
+    yajl_gen json_gen;
+    char *buf;
+    const size_t buflen;
     const char *fmt;
     const char *fmt_muted;
     const char *device;

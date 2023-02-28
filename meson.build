@@ -156,6 +156,7 @@ i3status_srcs = [
   'src/general.c',
   'src/output.c',
   'src/print_battery_info.c',
+  'src/print_blipper.c',
   'src/print_cpu_temperature.c',
   'src/print_cpu_usage.c',
   'src/print_ddate.c',
