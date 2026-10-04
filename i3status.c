@@ -383,6 +383,7 @@ int main(int argc, char *argv[]) {
         CFG_STR("memory_used_method", "classical", CFGF_NONE),
         CFG_STR("unit", "auto", CFGF_NONE),
         CFG_INT("decimals", 1, CFGF_NONE),
+        CFG_STR("prefix_type", "binary", CFGF_NONE),
         CFG_CUSTOM_ALIGN_OPT,
         CFG_CUSTOM_COLOR_OPTS,
         CFG_CUSTOM_MIN_WIDTH_OPT,
@@ -829,6 +830,7 @@ int main(int argc, char *argv[]) {
                     .memory_used_method = cfg_getstr(sec, "memory_used_method"),
                     .unit = cfg_getstr(sec, "unit"),
                     .decimals = cfg_getint(sec, "decimals"),
+                    .prefix_type = cfg_getstr(sec, "prefix_type"),
                 };
                 print_memory(&ctx);
                 SEC_CLOSE_MAP;

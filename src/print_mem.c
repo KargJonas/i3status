@@ -11,9 +11,11 @@
 #define STRING_SIZE ((sizeof "1023. TiB") + MAX_DECIMALS)
 
 #define BINARY_BASE 1024UL
+#define DECIMAL_BASE 1000UL
 
 #if defined(__linux__)
 static const char *const iec_symbols[] = {"B", "KiB", "MiB", "GiB", "TiB"};
+static const char *const si_symbols[] = {"B", "kB", "MB", "GB", "TB"};
 #define MAX_EXPONENT ((sizeof iec_symbols / sizeof *iec_symbols) - 1)
 #endif
 
@@ -22,19 +24,22 @@ static const char *const iec_symbols[] = {"B", "KiB", "MiB", "GiB", "TiB"};
  * Prints the given amount of bytes in a human readable manner.
  *
  */
-static int print_bytes_human(char *outwalk, unsigned long bytes, const char *unit, const int decimals) {
+static int print_bytes_human(char *outwalk, unsigned long bytes, const char *unit, const int decimals, const char *prefix_type) {
+    const bool decimal = strcasecmp(prefix_type, "decimal") == 0;
+    const char *const *symbols = decimal ? si_symbols : iec_symbols;
+    const unsigned long divisor = decimal ? DECIMAL_BASE : BINARY_BASE;
     double base = bytes;
     size_t exponent = 0;
-    while (base >= BINARY_BASE && exponent < MAX_EXPONENT) {
-        if (strcasecmp(unit, iec_symbols[exponent]) == 0) {
+    while (base >= divisor && exponent < MAX_EXPONENT) {
+        if (strcasecmp(unit, symbols[exponent]) == 0) {
             break;
         }
 
-        base /= BINARY_BASE;
+        base /= divisor;
         exponent += 1;
     }
     const int prec = decimals > MAX_DECIMALS ? MAX_DECIMALS : decimals;
-    return sprintf(outwalk, "%.*f %s", prec, base, iec_symbols[exponent]);
+    return sprintf(outwalk, "%.*f %s", prec, base, symbols[exponent]);
 }
 
 static int print_percentage(char *outwalk, float percent) {
@@ -179,11 +184,11 @@ void print_memory(memory_ctx_t *ctx) {
     char string_percentage_used[STRING_SIZE];
     char string_percentage_shared[STRING_SIZE];
 
-    print_bytes_human(string_ram_total, ram_total, ctx->unit, ctx->decimals);
-    print_bytes_human(string_ram_used, ram_used, ctx->unit, ctx->decimals);
-    print_bytes_human(string_ram_free, ram_free, ctx->unit, ctx->decimals);
-    print_bytes_human(string_ram_available, ram_available, ctx->unit, ctx->decimals);
-    print_bytes_human(string_ram_shared, ram_shared, ctx->unit, ctx->decimals);
+    print_bytes_human(string_ram_total, ram_total, ctx->unit, ctx->decimals, ctx->prefix_type);
+    print_bytes_human(string_ram_used, ram_used, ctx->unit, ctx->decimals, ctx->prefix_type);
+    print_bytes_human(string_ram_free, ram_free, ctx->unit, ctx->decimals, ctx->prefix_type);
+    print_bytes_human(string_ram_available, ram_available, ctx->unit, ctx->decimals, ctx->prefix_type);
+    print_bytes_human(string_ram_shared, ram_shared, ctx->unit, ctx->decimals, ctx->prefix_type);
     print_percentage(string_percentage_free, 100.0 * ram_free / ram_total);
     print_percentage(string_percentage_available, 100.0 * ram_available / ram_total);
     print_percentage(string_percentage_used, 100.0 * ram_used / ram_total);
