@@ -391,11 +391,19 @@ Of course it will also work with special iconic fonts, such as FontAwesome.
 If any of these special status strings are omitted, the default (CHR, BAT, UNK,
 FULL) is used.
 
+The +%icon+ placeholder shows how full the battery is as a horizontal battery
+symbol in 25% steps, followed by a lightning bolt while charging. It uses the
+Font Awesome icons included in Nerd Fonts, so such a font needs to be
+installed. To make the symbol larger, set +markup = pango+ in the +general+
+section and wrap it in a span, e.g. +<span size="large">%icon</span>+.
+
 *Example order (for the first battery)*: +battery 0+
 
 *Example order (aggregate of all batteries)*: +battery all+
 
 *Example format*: +%status %remaining (%emptytime %consumption)+
+
+*Example format*: +%icon %percentage+
 
 *Example format_down*: +No battery+
 
