@@ -698,7 +698,7 @@ void print_battery_info(battery_info_ctx_t *ctx) {
     snprintf(string_status, STRING_SIZE, "%s", statusstr);
 
     /* Horizontal Font Awesome battery glyphs (as included in Nerd Fonts), from
-     * empty to full in quarters, followed by a bolt while charging. */
+     * empty to full in quarters. */
     static const char *icons[] = {"\uF244", "\uF243", "\uF242", "\uF241", "\uF240"};
     char string_icon[STRING_SIZE] = "\U000F0091"; /* battery unknown */
     if (batt_info.percentage_remaining >= 0) {
@@ -706,7 +706,7 @@ void print_battery_info(battery_info_ctx_t *ctx) {
         level = max(level, 0);
         if (level > 4)
             level = 4;
-        snprintf(string_icon, STRING_SIZE, "%s%s", icons[level], batt_info.status == CS_CHARGING ? "\uF0E7" : "");
+        snprintf(string_icon, STRING_SIZE, "%s", icons[level]);
     }
     snprintf(string_percentage, STRING_SIZE, ctx->format_percentage, batt_info.percentage_remaining, pct_mark);
 

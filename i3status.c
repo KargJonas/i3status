@@ -456,6 +456,22 @@ int main(int argc, char *argv[]) {
         CFG_CUSTOM_SEP_BLOCK_WIDTH_OPT,
         CFG_END()};
 
+    cfg_opt_t claude_usage_opts[] = {
+        CFG_STR("format", "5h %5h_left (%5h_reset) 7d %7d_left (%7d_reset) %stale", CFGF_NONE),
+        CFG_STR("format_down", "Claude: %error", CFGF_NONE),
+        CFG_STR("format_reset_at", "%a %H:%M", CFGF_NONE),
+        CFG_STR("stale_marker", "(stale)", CFGF_NONE),
+        CFG_STR("credentials_path", "~/.claude/.credentials.json", CFGF_NONE),
+        CFG_INT("refresh_interval", 120, CFGF_NONE),
+        CFG_INT("threshold_degraded", 25, CFGF_NONE),
+        CFG_INT("threshold_bad", 10, CFGF_NONE),
+        CFG_CUSTOM_ALIGN_OPT,
+        CFG_CUSTOM_COLOR_OPTS,
+        CFG_CUSTOM_MIN_WIDTH_OPT,
+        CFG_CUSTOM_SEPARATOR_OPT,
+        CFG_CUSTOM_SEP_BLOCK_WIDTH_OPT,
+        CFG_END()};
+
     cfg_opt_t opts[] = {
         CFG_STR_LIST("order", "{}", CFGF_NONE),
         CFG_SEC("general", general_opts, CFGF_NONE),
@@ -475,6 +491,7 @@ int main(int argc, char *argv[]) {
         CFG_SEC("memory", memory_opts, CFGF_NONE),
         CFG_SEC("cpu_usage", usage_opts, CFGF_NONE),
         CFG_SEC("read_file", read_opts, CFGF_TITLE | CFGF_MULTI),
+        CFG_SEC("claude_usage", claude_usage_opts, CFGF_NONE),
         CFG_END()};
 
     char *configfile = NULL;
@@ -947,6 +964,25 @@ int main(int argc, char *argv[]) {
                     .max_chars = cfg_getint(sec, "max_characters"),
                 };
                 print_file_contents(&ctx);
+                SEC_CLOSE_MAP;
+            }
+
+            CASE_SEC("claude_usage") {
+                SEC_OPEN_MAP("claude_usage");
+                claude_usage_ctx_t ctx = {
+                    .json_gen = json_gen,
+                    .buf = buffer,
+                    .buflen = sizeof(buffer),
+                    .format = cfg_getstr(sec, "format"),
+                    .format_down = cfg_getstr(sec, "format_down"),
+                    .format_reset_at = cfg_getstr(sec, "format_reset_at"),
+                    .stale_marker = cfg_getstr(sec, "stale_marker"),
+                    .credentials_path = cfg_getstr(sec, "credentials_path"),
+                    .refresh_interval = cfg_getint(sec, "refresh_interval"),
+                    .threshold_degraded = cfg_getint(sec, "threshold_degraded"),
+                    .threshold_bad = cfg_getint(sec, "threshold_bad"),
+                };
+                print_claude_usage(&ctx);
                 SEC_CLOSE_MAP;
             }
         }

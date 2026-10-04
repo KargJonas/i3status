@@ -443,6 +443,22 @@ typedef struct {
 
 void print_file_contents(file_contents_ctx_t *ctx);
 
+typedef struct {
+    yajl_gen json_gen;
+    char *buf;
+    const size_t buflen;
+    const char *format;
+    const char *format_down;
+    const char *format_reset_at;
+    const char *stale_marker;
+    const char *credentials_path;
+    const int refresh_interval;
+    const int threshold_degraded;
+    const int threshold_bad;
+} claude_usage_ctx_t;
+
+void print_claude_usage(claude_usage_ctx_t *ctx);
+
 /* socket file descriptor for general purposes */
 extern int general_socket;
 

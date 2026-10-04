@@ -392,7 +392,8 @@ If any of these special status strings are omitted, the default (CHR, BAT, UNK,
 FULL) is used.
 
 The +%icon+ placeholder shows how full the battery is as a horizontal battery
-symbol in 25% steps, followed by a lightning bolt while charging. It uses the
+symbol in 25% steps. Combine it with +%status+ to show whether the battery is
+charging. It uses the
 Font Awesome icons included in Nerd Fonts, so such a font needs to be
 installed. To make the symbol larger, set +markup = pango+ in the +general+
 section and wrap it in a span, e.g. +<span size="large">%icon</span>+.
@@ -684,6 +685,37 @@ can't be read "error read" will be printed.
 *Example path*: "/proc/uptime"
 
 *Example Max_characters*: 255
+
+=== Claude Usage
+
+Shows how much of your Claude subscription's 5-hour and 7-day usage limits is
+left, and when each limit resets. It uses the OAuth token that Claude Code
+stores in +credentials_path+ (default: +~/.claude/.credentials.json+), so you
+need to be logged in with Claude Code. The token is only read, never refreshed.
+When it has expired, the last known values keep being displayed until Claude
+Code is used again (and refreshes it).
+
+The usage is fetched in the background every +refresh_interval+ seconds
+(default: 120). Once a limit's reset time has passed, its usage is shown as 0%
+even before new data has arrived.
+
+The placeholders +%5h_left+, +%5h_used+, +%5h_reset+ (time until the reset,
+e.g. "2h05m") and +%5h_reset_at+ (time of the reset, formatted with
++format_reset_at+ as in strftime(3), default "%a %H:%M") are available, and
+likewise for the 7-day limit (+%7d_left+, ...). +%stale+ is replaced with
++stale_marker+ (default "(stale)") if the last successful fetch is older than
+three refresh intervals, and +%error+ with the reason the last fetch failed.
+
+Until the first fetch succeeds, +format_down+ is shown. If less than
++threshold_degraded+ (default: 25) percent of either limit is left, the text is
+colored +color_degraded+; below +threshold_bad+ (default: 10) it is colored
++color_bad+.
+
+*Example order*: +claude_usage+
+
+*Example format*: +5h %5h_left (%5h_reset) 7d %7d_left (%7d_reset) %stale+
+
+*Example format_down*: +Claude: %error+
 
 == Universal module options
 

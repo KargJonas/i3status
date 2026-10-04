@@ -147,6 +147,7 @@ rt_dep = cc.find_library('rt', required: false)
 
 confuse_dep = dependency('libconfuse', method: 'pkg-config')
 yajl_dep = dependency('yajl', method: 'pkg-config')
+curl_dep = dependency('libcurl', method: 'pkg-config')
 
 i3status_srcs = [
   'i3status.c',
@@ -171,6 +172,7 @@ i3status_srcs = [
   'src/print_volume.c',
   'src/print_wireless_info.c',
   'src/print_file_contents.c',
+  'src/print_claude_usage.c',
   'src/process_runs.c',
 ]
 
@@ -182,6 +184,7 @@ i3status_deps = [
   rt_dep,
   confuse_dep,
   yajl_dep,
+  curl_dep,
   config_h,
 ]
 
