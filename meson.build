@@ -173,6 +173,8 @@ i3status_srcs = [
   'src/print_wireless_info.c',
   'src/print_file_contents.c',
   'src/print_claude_usage.c',
+  'src/print_vpn.c',
+  'src/click_events.c',
   'src/process_runs.c',
 ]
 

@@ -717,6 +717,37 @@ colored +color_degraded+; below +threshold_bad+ (default: 10) it is colored
 
 *Example format_down*: +Claude: %error+
 
+=== VPN
+
+Shows whether the VPN interface +interface+ (e.g. the WireGuard interface of a
+NetworkManager connection) is up, and which other VPN interfaces are up. Its
++%name+ is +name+, or the interface's name if +name+ is unset. A VPN interface
+is a WireGuard or tun/tap (OpenVPN) interface. Each other one that is up is
+formatted with +format_other+, in which +%name+ is its interface name, and the
+results are joined into +%others+, which is empty while none is up.
+
+While +interface+ is up, +format_up+ is shown, colored +color_good+; otherwise
++format_down+, colored +color_bad+.
+
+With the i3bar output format, a left click on the module runs the shell command
++disconnect+ while +interface+ is up, and +connect+ otherwise.
+
+*Example order*: +vpn+
+
+*Example interface*: +wg_config+
+
+*Example name*: +homebase+
+
+*Example format_up*: +VPN: %name%others+
+
+*Example format_down*: +VPN: no %name%others+
+
+*Example format_other*: +, %name+
+
+*Example connect*: +nmcli connection up homebase+
+
+*Example disconnect*: +nmcli connection down homebase+
+
 == Universal module options
 
 When using the i3bar output format, there are a few additional options that

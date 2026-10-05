@@ -459,6 +459,23 @@ typedef struct {
 
 void print_claude_usage(claude_usage_ctx_t *ctx);
 
+typedef struct {
+    yajl_gen json_gen;
+    char *buf;
+    const size_t buflen;
+    const char *interface;
+    const char *name;
+    const char *format_up;
+    const char *format_down;
+    const char *format_other;
+} vpn_ctx_t;
+
+void print_vpn(vpn_ctx_t *ctx);
+void click_vpn(cfg_t *sec);
+
+/* src/click_events.c */
+void start_click_events(void);
+
 /* socket file descriptor for general purposes */
 extern int general_socket;
 

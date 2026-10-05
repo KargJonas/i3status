@@ -472,6 +472,21 @@ int main(int argc, char *argv[]) {
         CFG_CUSTOM_SEP_BLOCK_WIDTH_OPT,
         CFG_END()};
 
+    cfg_opt_t vpn_opts[] = {
+        CFG_STR("interface", NULL, CFGF_NONE),
+        CFG_STR("name", NULL, CFGF_NONE),
+        CFG_STR("format_up", "VPN: %name%others", CFGF_NONE),
+        CFG_STR("format_down", "VPN: no %name%others", CFGF_NONE),
+        CFG_STR("format_other", " + %name", CFGF_NONE),
+        CFG_STR("connect", NULL, CFGF_NONE),
+        CFG_STR("disconnect", NULL, CFGF_NONE),
+        CFG_CUSTOM_ALIGN_OPT,
+        CFG_CUSTOM_COLOR_OPTS,
+        CFG_CUSTOM_MIN_WIDTH_OPT,
+        CFG_CUSTOM_SEPARATOR_OPT,
+        CFG_CUSTOM_SEP_BLOCK_WIDTH_OPT,
+        CFG_END()};
+
     cfg_opt_t opts[] = {
         CFG_STR_LIST("order", "{}", CFGF_NONE),
         CFG_SEC("general", general_opts, CFGF_NONE),
@@ -492,6 +507,7 @@ int main(int argc, char *argv[]) {
         CFG_SEC("cpu_usage", usage_opts, CFGF_NONE),
         CFG_SEC("read_file", read_opts, CFGF_TITLE | CFGF_MULTI),
         CFG_SEC("claude_usage", claude_usage_opts, CFGF_NONE),
+        CFG_SEC("vpn", vpn_opts, CFGF_NONE),
         CFG_END()};
 
     char *configfile = NULL;
@@ -622,8 +638,9 @@ int main(int argc, char *argv[]) {
     if (output_format == O_I3BAR) {
         /* Initialize the i3bar protocol. See i3/docs/i3bar-protocol
          * for details. */
-        printf("{\"version\":1}\n[\n");
+        printf("{\"version\":1,\"click_events\":true}\n[\n");
         fflush(stdout);
+        start_click_events();
         yajl_gen_array_open(json_gen);
         yajl_gen_clear(json_gen);
     }
@@ -983,6 +1000,22 @@ int main(int argc, char *argv[]) {
                     .threshold_bad = cfg_getint(sec, "threshold_bad"),
                 };
                 print_claude_usage(&ctx);
+                SEC_CLOSE_MAP;
+            }
+
+            CASE_SEC("vpn") {
+                SEC_OPEN_MAP("vpn");
+                vpn_ctx_t ctx = {
+                    .json_gen = json_gen,
+                    .buf = buffer,
+                    .buflen = sizeof(buffer),
+                    .interface = cfg_getstr(sec, "interface"),
+                    .name = cfg_getstr(sec, "name"),
+                    .format_up = cfg_getstr(sec, "format_up"),
+                    .format_down = cfg_getstr(sec, "format_down"),
+                    .format_other = cfg_getstr(sec, "format_other"),
+                };
+                print_vpn(&ctx);
                 SEC_CLOSE_MAP;
             }
         }
