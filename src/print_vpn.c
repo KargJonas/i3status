@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <net/if.h>
 #include <limits.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 
 #include "i3status.h"
 
@@ -83,6 +85,21 @@ void click_vpn(cfg_t *sec) {
     if (interface == NULL)
         return;
     const char *command = cfg_getstr(sec, interface_up(interface) ? "disconnect" : "connect");
-    if (command != NULL)
-        (void)system(command);
+    if (command == NULL)
+        return;
+    /* Not system(): the command would inherit our stdout, which is the bar's
+     * JSON stream (nmcli prints "Connection successfully activated" there),
+     * and our stdin, which carries the click events. */
+    pid_t pid = fork();
+    if (pid == 0) {
+        int devnull = open("/dev/null", O_RDWR);
+        if (devnull != -1) {
+            dup2(devnull, STDIN_FILENO);
+            dup2(devnull, STDOUT_FILENO);
+        }
+        execl("/bin/sh", "sh", "-c", command, (char *)NULL);
+        _exit(127);
+    }
+    if (pid > 0)
+        waitpid(pid, NULL, 0);
 }
