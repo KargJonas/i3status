@@ -82,8 +82,6 @@ if get_option('mans')
 
   xmlto = find_program('xmlto')
 
-  pod2man = find_program('pod2man')
-
   man_inputs = [
     'man/i3status.man',
   ]
