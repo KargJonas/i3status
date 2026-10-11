@@ -487,6 +487,20 @@ int main(int argc, char *argv[]) {
         CFG_CUSTOM_SEP_BLOCK_WIDTH_OPT,
         CFG_END()};
 
+    cfg_opt_t synology_drive_opts[] = {
+        CFG_STR("path", "~/.SynologyDrive", CFGF_NONE),
+        CFG_INT("port", 6690, CFGF_NONE),
+        CFG_STR("format_synced", "Drive: synced", CFGF_NONE),
+        CFG_STR("format_syncing", "Drive: syncing", CFGF_NONE),
+        CFG_STR("format_offline", "Drive: offline, synced %age ago", CFGF_NONE),
+        CFG_STR("format_down", "Drive: not running, synced %age ago", CFGF_NONE),
+        CFG_CUSTOM_ALIGN_OPT,
+        CFG_CUSTOM_COLOR_OPTS,
+        CFG_CUSTOM_MIN_WIDTH_OPT,
+        CFG_CUSTOM_SEPARATOR_OPT,
+        CFG_CUSTOM_SEP_BLOCK_WIDTH_OPT,
+        CFG_END()};
+
     cfg_opt_t opts[] = {
         CFG_STR_LIST("order", "{}", CFGF_NONE),
         CFG_SEC("general", general_opts, CFGF_NONE),
@@ -508,6 +522,7 @@ int main(int argc, char *argv[]) {
         CFG_SEC("read_file", read_opts, CFGF_TITLE | CFGF_MULTI),
         CFG_SEC("claude_usage", claude_usage_opts, CFGF_NONE),
         CFG_SEC("vpn", vpn_opts, CFGF_NONE),
+        CFG_SEC("synology_drive", synology_drive_opts, CFGF_NONE),
         CFG_END()};
 
     char *configfile = NULL;
@@ -1016,6 +1031,23 @@ int main(int argc, char *argv[]) {
                     .format_other = cfg_getstr(sec, "format_other"),
                 };
                 print_vpn(&ctx);
+                SEC_CLOSE_MAP;
+            }
+
+            CASE_SEC("synology_drive") {
+                SEC_OPEN_MAP("synology_drive");
+                synology_drive_ctx_t ctx = {
+                    .json_gen = json_gen,
+                    .buf = buffer,
+                    .buflen = sizeof(buffer),
+                    .path = cfg_getstr(sec, "path"),
+                    .port = cfg_getint(sec, "port"),
+                    .format_synced = cfg_getstr(sec, "format_synced"),
+                    .format_syncing = cfg_getstr(sec, "format_syncing"),
+                    .format_offline = cfg_getstr(sec, "format_offline"),
+                    .format_down = cfg_getstr(sec, "format_down"),
+                };
+                print_synology_drive(&ctx);
                 SEC_CLOSE_MAP;
             }
         }

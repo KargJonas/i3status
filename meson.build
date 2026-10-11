@@ -174,6 +174,7 @@ i3status_srcs = [
   'src/print_file_contents.c',
   'src/print_claude_usage.c',
   'src/print_vpn.c',
+  'src/print_synology_drive.c',
   'src/click_events.c',
   'src/process_runs.c',
 ]

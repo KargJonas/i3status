@@ -748,6 +748,38 @@ With the i3bar output format, a left click on the module runs the shell command
 
 *Example disconnect*: +nmcli connection down homebase+
 
+=== Synology Drive
+
+Shows whether the Synology Drive client is running, connected to the NAS and
+syncing, and how long ago the local data was last known to be in sync. The
+client's files are expected in +path+ (default: +~/.SynologyDrive+).
+
+The client is running while the process in +path+/daemon.pid is, and connected
+while a TCP connection to +port+ (default: 6690, the Drive server's port) is
+established. It is syncing while the latest sync activity in its log
+(+path+/log/daemon.log) is newer than the latest "Syncer event pool is now
+empty" message.
+
+While the client is connected and not syncing, +format_synced+ is shown,
+colored +color_good+; while syncing, +format_syncing+. While it runs but is
+not connected, +format_offline+ is shown, colored +color_degraded+, and while
+it does not run, +format_down+, colored +color_bad+.
+
++%age+ is the time since the data was last known to be in sync (e.g. "2h05m",
+or "?" if unknown): the last time the module saw the client connected and not
+syncing, or the last time the client logged that it had nothing left to sync,
+whichever is later.
+
+*Example order*: +synology_drive+
+
+*Example format_synced*: +Drive: synced+
+
+*Example format_syncing*: +Drive: syncing+
+
+*Example format_offline*: +Drive: offline, synced %age ago+
+
+*Example format_down*: +Drive: not running, synced %age ago+
+
 == Universal module options
 
 When using the i3bar output format, there are a few additional options that

@@ -471,6 +471,20 @@ typedef struct {
 } vpn_ctx_t;
 
 void print_vpn(vpn_ctx_t *ctx);
+
+typedef struct {
+    yajl_gen json_gen;
+    char *buf;
+    const size_t buflen;
+    const char *path;
+    const int port;
+    const char *format_synced;
+    const char *format_syncing;
+    const char *format_offline;
+    const char *format_down;
+} synology_drive_ctx_t;
+
+void print_synology_drive(synology_drive_ctx_t *ctx);
 void click_vpn(cfg_t *sec);
 
 /* src/click_events.c */
