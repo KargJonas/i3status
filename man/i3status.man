@@ -705,6 +705,9 @@ e.g. "2h05m") and +%5h_reset_at+ (time of the reset, formatted with
 likewise for the 7-day limit (+%7d_left+, ...). +%stale+ is replaced with
 +stale_marker+ (default "(stale)") if the last successful fetch is older than
 three refresh intervals, and +%error+ with the reason the last fetch failed.
++%account+ is the email address of the account logged in to Claude Code, read
+from +account_path+ (default: +~/.claude.json+) on every fetch, or "?" if none
+is; it is also available in +format_down+.
 
 Until the first fetch succeeds, +format_down+ is shown. If less than
 +threshold_degraded+ (default: 25) percent of either limit is left, the text is

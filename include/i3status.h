@@ -452,6 +452,7 @@ typedef struct {
     const char *format_reset_at;
     const char *stale_marker;
     const char *credentials_path;
+    const char *account_path;
     const int refresh_interval;
     const int threshold_degraded;
     const int threshold_bad;

@@ -3,7 +3,8 @@
 // Shows how much of the Claude subscription's 5-hour and 7-day usage limits
 // is left, and when they reset. Uses the OAuth token that Claude Code stores
 // in ~/.claude/.credentials.json. The token is only read, never refreshed:
-// refreshing would rotate the refresh token and log Claude Code out.
+// refreshing would rotate the refresh token and log Claude Code out. The
+// logged-in account's email address is read from ~/.claude.json.
 //
 // Fetching happens in a background thread so a slow network never blocks the
 // bar; between fetches the last known values are displayed.
@@ -14,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <yajl/yajl_gen.h>
 #include <yajl/yajl_tree.h>
@@ -37,6 +39,7 @@ static time_t last_attempt;
 static time_t last_success;
 static bool fetching;
 static char last_error[STRING_SIZE] = "loading";
+static char account[STRING_SIZE] = "?";
 
 struct response {
     char *data;
@@ -108,6 +111,31 @@ static char *read_access_token(const char *path, char *error, size_t error_size)
     return result;
 }
 
+/* Reads the logged-in account's email address into out ("?" if logged out).
+ * Returns false if the file could not be read or parsed (e.g. while Claude
+ * Code is writing it), leaving out unchanged. */
+static bool read_account(const char *path, char *out, size_t size) {
+    struct stat st;
+    if (stat(path, &st) != 0)
+        return false;
+
+    /* The file keeps growing with Claude Code's per-project state, so it has
+     * to be read whole rather than into a fixed-size buffer. */
+    char *contents = scalloc(st.st_size + 1);
+    yajl_val root = NULL;
+    if (slurp(path, contents, st.st_size + 1))
+        root = yajl_tree_parse(contents, NULL, 0);
+    free(contents);
+    if (root == NULL)
+        return false;
+
+    const char *email_path[] = {"oauthAccount", "emailAddress", NULL};
+    yajl_val email = yajl_tree_get(root, email_path, yajl_t_string);
+    snprintf(out, size, "%s", email != NULL ? YAJL_GET_STRING(email) : "?");
+    yajl_tree_free(root);
+    return true;
+}
+
 static struct usage_window parse_window(yajl_val root, const char *name) {
     struct usage_window window = {-1, 0};
     const char *utilization_path[] = {name, "utilization", NULL};
@@ -121,9 +149,15 @@ static struct usage_window parse_window(yajl_val root, const char *name) {
     return window;
 }
 
+struct fetch_paths {
+    char *credentials;
+    char *account;
+};
+
 static void *fetch_usage(void *arg) {
-    char *path = arg;
+    struct fetch_paths *paths = arg;
     char error[STRING_SIZE] = "";
+    char email[STRING_SIZE];
     struct usage_window five = {-1, 0}, seven = {-1, 0};
 
     /* yajl parses numbers with strtod(), which must not use e.g. a German
@@ -132,8 +166,11 @@ static void *fetch_usage(void *arg) {
     if (c_locale != (locale_t)0)
         uselocale(c_locale);
 
-    char *token = read_access_token(path, error, sizeof(error));
-    free(path);
+    const bool have_email = read_account(paths->account, email, sizeof(email));
+    char *token = read_access_token(paths->credentials, error, sizeof(error));
+    free(paths->credentials);
+    free(paths->account);
+    free(paths);
 
     if (token != NULL) {
         struct response resp = {NULL, 0};
@@ -186,6 +223,8 @@ static void *fetch_usage(void *arg) {
         last_success = time(NULL);
     }
     snprintf(last_error, sizeof(last_error), "%s", error);
+    if (have_email)
+        snprintf(account, sizeof(account), "%s", email);
     fetching = false;
     pthread_mutex_unlock(&state_lock);
 
@@ -208,10 +247,15 @@ static void maybe_start_fetch(claude_usage_ctx_t *ctx, time_t now) {
     if (fetching || (last_attempt != 0 && now - last_attempt < ctx->refresh_interval))
         return;
 
-    char *path = resolve_tilde(ctx->credentials_path);
+    /* resolve_tilde() is not thread-safe, so it runs here in the main thread. */
+    struct fetch_paths *paths = scalloc(sizeof(struct fetch_paths));
+    paths->credentials = resolve_tilde(ctx->credentials_path);
+    paths->account = resolve_tilde(ctx->account_path);
     pthread_t thread;
-    if (pthread_create(&thread, NULL, fetch_usage, path) != 0) {
-        free(path);
+    if (pthread_create(&thread, NULL, fetch_usage, paths) != 0) {
+        free(paths->credentials);
+        free(paths->account);
+        free(paths);
         return;
     }
     pthread_detach(thread);
@@ -280,13 +324,15 @@ void print_claude_usage(claude_usage_ctx_t *ctx) {
     maybe_start_fetch(ctx, now);
     struct usage_window five = five_hour, seven = seven_day;
     const time_t success = last_success;
-    char error[STRING_SIZE];
+    char error[STRING_SIZE], email[STRING_SIZE];
     snprintf(error, sizeof(error), "%s", last_error);
+    snprintf(email, sizeof(email), "%s", account);
     pthread_mutex_unlock(&state_lock);
 
     if (success == 0) {
         placeholder_t placeholders[] = {
-            {.name = "%error", .value = error}};
+            {.name = "%error", .value = error},
+            {.name = "%account", .value = email}};
         const size_t num = sizeof(placeholders) / sizeof(placeholder_t);
         char *formatted = format_placeholders(ctx->format_down, &placeholders[0], num);
         OUTPUT_FORMATTED;
@@ -328,7 +374,8 @@ void print_claude_usage(claude_usage_ctx_t *ctx) {
         {.name = "%7d_reset_at", .value = seven_strings.reset_at},
         {.name = "%7d_reset", .value = seven_strings.reset},
         {.name = "%stale", .value = stale ? ctx->stale_marker : ""},
-        {.name = "%error", .value = error}};
+        {.name = "%error", .value = error},
+        {.name = "%account", .value = email}};
 
     const size_t num = sizeof(placeholders) / sizeof(placeholder_t);
     char *untrimmed = format_placeholders(ctx->format, &placeholders[0], num);
